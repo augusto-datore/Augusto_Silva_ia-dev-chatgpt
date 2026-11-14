@@ -1,31 +1,72 @@
 # Service Desk Acadêmico
 
-Aplicativo web estático feito em HTML, CSS e JavaScript para demonstrar versionamento de código em aula.
+Aplicativo web estático desenvolvido em HTML, CSS e JavaScript para demonstrar a abertura, o acompanhamento e a atualização de chamados de suporte.
 
-## Como abrir sem servidor
+## Como executar
 
-Este projeto não precisa de servidor local, Node.js, Python ou instalação de dependências.
+O projeto utiliza HTML, CSS e JavaScript puro, sem frameworks ou dependências externas.
 
-Opção mais simples:
+Para executar no Windows:
 
-1. Dê dois cliques no arquivo `abrir-service-desk.bat`.
+1. Dê dois cliques em `abrir-service-desk.bat`.
 2. O navegador padrão abrirá o arquivo `index.html`.
 
-Também é possível abrir diretamente o arquivo `index.html` com dois cliques.
+Também é possível abrir diretamente o arquivo `index.html` em um navegador moderno.
 
 ## Funcionalidades
 
-- Tela do usuário para abrir chamados.
-- Painel do analista para selecionar chamados.
-- Alteração de status.
-- Alteração de prioridade.
-- Registro de correção.
-- Histórico dos chamados.
-- Persistência simples usando `localStorage`.
+- Abertura de chamados com nome, e-mail, categoria, prioridade, título e descrição.
+- Painel do analista para visualizar e selecionar chamados.
+- Busca por número do chamado, título ou nome do solicitante.
+- Alteração de status e prioridade.
+- Registro da correção ou próxima ação.
+- Histórico de alterações de cada chamado.
+- Tela de histórico geral.
+- Persistência dos dados no `localStorage` do navegador.
+- Restauração dos dados de demonstração.
 
-## Arquivos principais
+## Status disponíveis
 
-- `index.html`: estrutura das telas.
-- `styles.css`: aparência do aplicativo.
-- `app.js`: regras de interação e persistência local.
-- `abrir-service-desk.bat`: atalho para abrir o app no navegador sem subir servidor.
+- Aberto
+- Em atendimento
+- Aguardando usuário
+- Resolvido
+
+## Prioridades disponíveis
+
+- Baixa
+- Média
+- Alta
+- Crítica
+
+## Persistência dos dados
+
+Os chamados são armazenados no `localStorage` do navegador, utilizando a chave `serviceDeskTickets`.
+
+Isso significa que os dados ficam salvos no navegador e no perfil de usuário em que o sistema foi aberto.
+
+As informações não são enviadas para um servidor e não são compartilhadas automaticamente entre computadores ou navegadores.
+
+A opção **Restaurar demonstração** solicita confirmação e substitui os dados locais pelos chamados de demonstração.
+
+## Estrutura dos arquivos
+
+- `index.html`: estrutura e conteúdo das telas.
+- `styles.css`: aparência, layout e responsividade.
+- `app.js`: interações, validações, histórico e persistência local.
+- `README.md`: documentação do projeto.
+
+## Tecnologias utilizadas
+
+- HTML5
+- CSS3
+- JavaScript
+- localStorage
+
+## Observações
+
+Este é um projeto acadêmico demonstrativo.
+
+O `localStorage` não substitui um banco de dados de produção, autenticação de usuários ou controle de acesso.
+
+Como não há backend, as informações ficam restritas ao navegador local.
