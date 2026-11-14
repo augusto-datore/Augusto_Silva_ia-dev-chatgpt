@@ -36,9 +36,6 @@ const seedTickets = [
   }
 ];
 
-let tickets = loadTickets();
-let selectedTicketId = tickets[0]?.id ?? null;
-
 const views = document.querySelectorAll(".view");
 const tabs = document.querySelectorAll(".tab");
 const ticketForm = document.querySelector("#ticketForm");
@@ -49,6 +46,11 @@ const historyTable = document.querySelector("#historyTable");
 const searchInput = document.querySelector("#searchInput");
 const clearData = document.querySelector("#clearData");
 const toast = document.querySelector("#toast");
+
+let toastTimeout;
+
+let tickets = loadTickets();
+let selectedTicketId = tickets[0]?.id ?? null;
 
 function activateView(tab) {
   const targetView = document.getElementById(tab.dataset.view);
