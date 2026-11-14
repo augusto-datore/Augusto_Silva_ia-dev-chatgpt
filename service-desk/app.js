@@ -569,8 +569,14 @@ function escapeHtml(value) {
 
 function showToast(message) {
   toast.textContent = message;
+
   toast.classList.add("is-visible");
-  setTimeout(() => toast.classList.remove("is-visible"), 2600);
+
+  window.clearTimeout(toastTimeout);
+
+  toastTimeout = window.setTimeout(() => {
+    toast.classList.remove("is-visible");
+  }, 2600);
 }
 
 render();
