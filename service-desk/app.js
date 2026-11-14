@@ -50,13 +50,32 @@ const searchInput = document.querySelector("#searchInput");
 const clearData = document.querySelector("#clearData");
 const toast = document.querySelector("#toast");
 
+function activateView(tab) {
+  const targetView = document.getElementById(tab.dataset.view);
+
+  if (!targetView) return;
+
+  tabs.forEach((item) => {
+    const isActive = item === tab;
+
+    item.classList.toggle("is-active", isActive);
+    item.setAttribute("aria-selected", String(isActive));
+    item.setAttribute("tabindex", isActive ? "0" : "-1");
+  });
+
+  views.forEach((view) => {
+    const isActive = view === targetView;
+
+    view.classList.toggle("is-active", isActive);
+    view.hidden = !isActive;
+  });
+
+  render();
+}
+
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
-    tabs.forEach((item) => item.classList.remove("is-active"));
-    views.forEach((view) => view.classList.remove("is-active"));
-    tab.classList.add("is-active");
-    document.querySelector(`#${tab.dataset.view}`).classList.add("is-active");
-    render();
+    activateView(tab);
   });
 });
 
