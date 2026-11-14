@@ -98,41 +98,90 @@ tabs.forEach((tab) => {
 ticketForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  const formTicket = {
+  const requester = document.querySelector("#requester").value.trim();
+  const email = document.querySelector("#email").value.trim();
+  const category = document.querySelector("#category").value;
+  const priority = document.querySelector("#priority").value;
+  const title = document.querySelector("#title").value.trim();
+  const description = document.querySelector("#description").value.trim();
+
+  if (!requester || !email || !category || !priority || !title || !description) {
+    showToast("Preencha todos os campos antes de enviar.");
+    return;
+  }
+
+  const now = new Date().toISOString();
+
+  const newTicket = {
     id: nextId(),
-    requester: document.querySelector("#requester").value.trim(),
-    email: document.querySelector("#email").value.trim(),
-    category: document.querySelector("#category").value,
-    priority: document.querySelector("#priority").value,
+    requester,
+    email,
+    category,
+    priority,
     status: "Aberto",
-    title: document.querySelector("#title").value.trim(),
-    description: document.querySelector("#description").value.trim(),
+    title,
+    description,
     correction: "",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    events: [
-      `Chamado aberto por ${document.querySelector("#requester").value.trim()}.`
-    ]
+    createdAt: now,
+    updatedAt: now,
+    events: [`Chamado aberto por ${requester}.`]
   };
 
-  tickets.unshift(formTicket);
-  selectedTicketId = formTicket.id;
-  saveTickets();
+  const previousSelectedId = selectedTicketId;
+
+  tickets.unshift(newTicket);
+  selectedTicketId = newTicket.id;
+
+  if (!saveTickets()) {
+    tickets.shift();
+    selectedTicketId = previousSelectedId;
+    return;
+  }
+
   ticketForm.reset();
-  showToast(`Chamado #${formTicket.id} aberto com sucesso.`);
+
+  showToast(`Chamado #${newTicket.id} aberto com sucesso.`);
+
   render();
 });
+
+
+// BUSCA DE CHAMADOS
 
 searchInput.addEventListener("input", renderTicketList);
 
 clearData.addEventListener("click", () => {
-  localStorage.removeItem(STORAGE_KEY);
-  tickets = [...seedTickets];
-  selectedTicketId = tickets[0].id;
-  saveTickets();
-  showToast("Base local restaurada.");
+  const confirmed = window.confirm(
+    "Isso apagará os chamados salvos neste navegador e restaurará os dados de demonstração. Deseja continuar?"
+  );
+
+  if (!confirmed) return;
+
+  const previousTickets = tickets;
+  const previousSelectedId = selectedTicketId;
+
+  tickets = seedTickets.map((ticket) => ({
+    ...ticket,
+    events: [...ticket.events]
+  }));
+
+  selectedTicketId = tickets[0]?.id ?? null;
+
+  if (!saveTickets()) {
+    tickets = previousTickets;
+    selectedTicketId = previousSelectedId;
+
+    render();
+    return;
+  }
+
+  showToast("Dados de demonstração restaurados.");
+
   render();
 });
+
+
+// CARREGAMENTO DOS CHAMADOS
 
 function loadTickets() {
   try {
@@ -234,8 +283,27 @@ function normalizeTicket(ticket) {
 
 
 function saveTickets() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(tickets)
+    );
+
+    return true;
+
+  } catch (error) {
+    console.error("Não foi possível salvar os chamados:", error);
+
+    showToast(
+      "Erro ao salvar. Verifique o armazenamento do navegador."
+    );
+
+    return false;
+  }
 }
+
+
+// GERAÇÃO DE ID
 
 function nextId() {
   if (tickets.length === 0) {
@@ -365,35 +433,77 @@ function renderTicketDetails() {
 }
 
 function updateSelectedTicket(ticketId) {
-  const ticket = tickets.find((item) => item.id === ticketId);
+  const ticket = tickets.find(
+    (item) => Number(item.id) === Number(ticketId)
+  );
+
   if (!ticket) return;
 
   const newStatus = document.querySelector("#detailStatus").value;
   const newPriority = document.querySelector("#detailPriority").value;
-  const newCorrection = document.querySelector("#detailCorrection").value.trim();
+
+  const newCorrection = document
+    .querySelector("#detailCorrection")
+    .value
+    .trim();
+
   const eventList = [];
 
   if (ticket.status !== newStatus) {
-    eventList.push(`Status alterado de ${ticket.status} para ${newStatus}.`);
+    eventList.push(
+      `Status alterado de ${ticket.status} para ${newStatus}.`
+    );
   }
 
   if (ticket.priority !== newPriority) {
-    eventList.push(`Prioridade alterada de ${ticket.priority} para ${newPriority}.`);
+    eventList.push(
+      `Prioridade alterada de ${ticket.priority} para ${newPriority}.`
+    );
   }
 
-  if (ticket.correction !== newCorrection && newCorrection) {
-    eventList.push(`Correção registrada: ${newCorrection}`);
+  if (ticket.correction !== newCorrection) {
+    eventList.push(
+      newCorrection
+        ? `Correção registrada: ${newCorrection}`
+        : "Registro de correção removido."
+    );
   }
+
+  if (eventList.length === 0) {
+    showToast("Nenhuma alteração foi realizada.");
+    return;
+  }
+
+  const previousTicket = {
+    ...ticket,
+    events: [...(ticket.events || [])]
+  };
 
   ticket.status = newStatus;
   ticket.priority = newPriority;
   ticket.correction = newCorrection;
   ticket.updatedAt = new Date().toISOString();
-  ticket.events = ticket.events.concat(eventList);
+
+  ticket.events = [
+    ...(ticket.events || []),
+    ...eventList
+  ];
+
+  if (!saveTickets()) {
+    Object.assign(ticket, previousTicket);
+
+    render();
+
+    return;
+  }
 
   showToast(`Chamado #${ticket.id} atualizado.`);
+
   render();
 }
+
+
+// HISTÓRICO GERAL
 
 function renderHistory() {
   historyTable.innerHTML = tickets.map((ticket) => `
