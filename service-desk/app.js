@@ -93,7 +93,32 @@ tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     activateView(tab);
   });
+
+  tab.addEventListener("keydown", (event) => {
+    const currentIndex = Array.from(tabs).indexOf(tab);
+    let nextIndex = currentIndex;
+
+    if (event.key === "ArrowRight") {
+      nextIndex = (currentIndex + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabs.length - 1;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+
+    tabs[nextIndex].focus();
+    activateView(tabs[nextIndex]);
+  });
 });
+
+
+// ABERTURA DE CHAMADOS
 
 ticketForm.addEventListener("submit", (event) => {
   event.preventDefault();
