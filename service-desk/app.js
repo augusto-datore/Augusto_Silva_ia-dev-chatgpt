@@ -36,6 +36,20 @@ const seedTickets = [
   }
 ];
 
+const allowedStatuses = [
+  "Aberto",
+  "Em atendimento",
+  "Aguardando usuário",
+  "Resolvido"
+];
+
+const allowedPriorities = [
+  "Baixa",
+  "Média",
+  "Alta",
+  "Crítica"
+];
+
 const views = document.querySelectorAll(".view");
 const tabs = document.querySelectorAll(".tab");
 const ticketForm = document.querySelector("#ticketForm");
@@ -121,26 +135,122 @@ clearData.addEventListener("click", () => {
 });
 
 function loadTickets() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedTickets));
-    return [...seedTickets];
-  }
-
   try {
-    return JSON.parse(stored);
-  } catch {
-    return [...seedTickets];
+    const stored = localStorage.getItem(STORAGE_KEY);
+
+    if (!stored) {
+      const initialTickets = seedTickets.map((ticket) => ({
+        ...ticket,
+        events: [...ticket.events]
+      }));
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(initialTickets)
+      );
+
+      return initialTickets;
+    }
+
+    const parsedTickets = JSON.parse(stored);
+
+    if (!Array.isArray(parsedTickets)) {
+      throw new Error("O conteúdo salvo não é uma lista de chamados.");
+    }
+
+    return parsedTickets
+      .map(normalizeTicket)
+      .filter((ticket) => ticket !== null);
+
+  } catch (error) {
+    console.error("Não foi possível carregar os chamados:", error);
+
+    showToast(
+      "Não foi possível ler os dados salvos. A base de demonstração será carregada."
+    );
+
+    return seedTickets.map((ticket) => ({
+      ...ticket,
+      events: [...ticket.events]
+    }));
   }
 }
+
+
+// VALIDAÇÃO DOS CHAMADOS
+
+function normalizeTicket(ticket) {
+  if (!ticket || typeof ticket !== "object") {
+    return null;
+  }
+
+  const id = Number(ticket.id);
+
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return null;
+  }
+
+  if (
+    typeof ticket.requester !== "string" ||
+    typeof ticket.email !== "string" ||
+    typeof ticket.category !== "string" ||
+    typeof ticket.title !== "string" ||
+    typeof ticket.description !== "string" ||
+    typeof ticket.correction !== "string"
+  ) {
+    return null;
+  }
+
+  if (!allowedStatuses.includes(ticket.status)) {
+    return null;
+  }
+
+  if (!allowedPriorities.includes(ticket.priority)) {
+    return null;
+  }
+
+  if (
+    typeof ticket.createdAt !== "string" ||
+    typeof ticket.updatedAt !== "string" ||
+    Number.isNaN(Date.parse(ticket.createdAt)) ||
+    Number.isNaN(Date.parse(ticket.updatedAt))
+  ) {
+    return null;
+  }
+
+  if (
+    !Array.isArray(ticket.events) ||
+    !ticket.events.every((event) => typeof event === "string")
+  ) {
+    return null;
+  }
+
+  return {
+    ...ticket,
+    id,
+    events: [...ticket.events]
+  };
+}
+
 
 function saveTickets() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
 }
 
 function nextId() {
-  return Math.max(...tickets.map((ticket) => ticket.id)) + 1;
+  if (tickets.length === 0) {
+    return 1001;
+  }
+
+  const highestId = Math.max(
+    ...tickets.map((ticket) => Number(ticket.id) || 0)
+  );
+
+  return highestId + 1;
 }
+
+
+// ATUALIZAÇÃO DAS TELAS
 
 function render() {
   renderTicketList();
